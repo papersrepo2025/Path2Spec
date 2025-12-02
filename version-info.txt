@@ -1,0 +1,6 @@
+0.17.0-alpha-15
+OpenJML 9d4e5fa12ded902ff846257e26b9a113974ffec8
+Specs 45d631e7c9d4caa332e28121b19b603378eb0d02
+JMLAnnotations a5dabe3d4af6c4265fdf23c3519ca91ac158faa5
+Solvers 1b3073a5b31c07ec95c32c599989bf918b0ff82a
+openjml.github.io 0f5cfc83348a6b637baa14b6398139461a6db73f
