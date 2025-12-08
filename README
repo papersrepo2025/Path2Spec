@@ -1,18 +1,48 @@
-This is a release of the openjml tool.
+Overview
+Formal specifications are critical for program verification, comprehension, and maintenance. However, manually writing them is costly and difficult to scale. Recent studies have shown that Large Language Models (LLMs) are promising for automated specification generation, but existing methods suffer from quality issues.
 
-The release is installed by unzipping the release file as downloaded from github
-into an empty folder of the user's choice. All files in the release must be left 
-in the same relative location with respect to each other.
+We analyze a state-of-the-art approach and find that at least 34.6% of successfully verified specifications actually fail to meaningfully capture the program's distinct behavior, which is a quality issue not captured by metrics that only measure verification success. We further found that a major factor contributing to such hidden quality issues stems from the design of existing methods: these methods treat a program as a single unit, resulting in overly general, coarse-grained constraints.
 
-The 'openjml' bash script is the executable to run; the -? option gives
-help information and the OpenJML User Guide gives information about running 
-the tool. On Mac systems, you may need to execute the `mac-setup` script 
-so that the Mac OS security allows openjml and its libraries to run.
+To this end, we introduce Path2Spec, a divide-and-conquer framework that addresses these limitations through systematic path-based reasoning. Path2Spec leverages LLMs to extract all execution paths from an input program, generates path-specific specifications for each, and merges them into a comprehensive overall specification. For complex programs where path-based generation struggles, Path2Spec employs a decompose-then-retry strategy that recursively breaks a program into smaller subprograms based on logical branches, generates specifications for each, and merges them back.
 
-The 'openjml-java' script runs the OpenJML version of java -- which has the 
-OpenJML runtime libraries (jmlruntime.jar) included.
+Installation
+Prerequisites
+Java 8  (for Java PathFinder)
 
-Some demo examples are contained in the demos subdirectory.
-More will be added over time.
+Python 3.10 (for LLM integration and framework)
 
-See openjml.org and github.com/OpenJML/OpenJML for additional information.
+LLM API Access (OpenAI or compatible service)
+
+Setup Instructions
+# Clone the repository
+git clone https://github.com/your-org/path2spec.git
+cd path2spec
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install openai psutil
+
+# Set up environment variables
+echo "OPENAI_API_KEY=your_api_key_here" > .env
+
+Project Structure
+path2spec/
+├── src/
+│   ├── Code/            
+│   │   ├── Pathe2Spec/    
+│   │   ├── Path_Only/    
+│   │   ├─ Decompose_Only/          
+│   │   ├─ Auto_jpf_extractpath/     
+│   │   ├─ Path_level_merge/   
+│   │   └── Layer_level_merge/   
+│   ├── Prompt/    
+│   ├── benchmarks/    
+│   └── Result/ 
+├── JPF/                  
+└── OpenJML/  
+
+Basic Usage
+Run Path2Spec script
