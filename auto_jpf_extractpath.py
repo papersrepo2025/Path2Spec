@@ -11,13 +11,13 @@ class JPFAutomator:
     def __init__(self, java_dir, jpf_jar_path):
         self.java_dir = os.path.abspath(java_dir)
         self.jpf_jar_path = os.path.abspath(jpf_jar_path)
-        self.classes_dir = "/mnt/hdd/danhuang/AI4Spec/jpf/jpf-core1/build/examples"
+        self.classes_dir = ""
         
     def create_jpf_config(self, java_file):
 
         file_name = os.path.basename(java_file)
         class_name = file_name.replace('.java', '')
-        jpf_file = os.path.join("/mnt/hdd/danhuang/AI4Spec/jpf/jpf-core1/src/examples", f"{class_name}.jpf")
+        jpf_file = os.path.join("", f"{class_name}.jpf")
         print(jpf_file)
         
         config_content = f"""# Auto-generated JPF configuration for {class_name}
@@ -55,7 +55,7 @@ symbolic.output.path=/tmp/symbolic_output
             return False
         
 
-        compile_cmd = ["javac", "-d", "/mnt/hdd/danhuang/AI4Spec/jpf/jpf-core1/build/examples"] + java_files
+        compile_cmd = ["javac", "-d", ""] + java_files
         print(compile_cmd)
         
        
@@ -77,7 +77,7 @@ symbolic.output.path=/tmp/symbolic_output
             return False
     
     def run_jpf_analysis(self, jpf_file):
-        jpf_core_dir = "/mnt/hdd/danhuang/AI4Spec/jpf/jpf-core1"
+        jpf_core_dir = ""
         #file_path = "src/examples/Abs.jpf" 
         if not os.path.exists(jpf_file):
             print(f"JPF file not found: {jpf_file}")
@@ -85,7 +85,6 @@ symbolic.output.path=/tmp/symbolic_output
         file_name = os.path.basename(jpf_file)
         file_path="src/examples/" + file_name
         print(file_path)
-        #jpf_cmd = ["java", "-jar", "/mnt/hdd/danhuang/AI4Spec/jpf/jpf-core1/build/RunJPF.jar", file_path]
         jpf_cmd = ["java", "-jar", "build/RunJPF.jar", file_path]
 
         print(jpf_cmd)
@@ -103,7 +102,7 @@ symbolic.output.path=/tmp/symbolic_output
             )
             
             print(result.stdout)
-            result_path="/mnt/hdd/danhuang/AI4Spec/jpf/result/"
+            result_path=""
             class_name = file_name.replace('.jpf', '')
             result_file_path=result_path+class_name+".txt"
             with open(result_file_path, "w", encoding="utf-8") as file:
