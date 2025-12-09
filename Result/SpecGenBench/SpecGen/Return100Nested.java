@@ -1,0 +1,19 @@
+public class Return100Nested {
+    /*@ public normal_behavior
+      @   ensures \result == 100;
+      @   assignable \nothing;
+      @*/
+    public static int return100 () {
+        int res = 0;
+        //@ maintaining 0 <= i && i <= 10 && res == 10*i;
+        //@ decreases 10 - i;
+        for(int i = 0; i < 10; i++) {
+            //@ maintaining 0 <= j && j <= 10 && res == 10*i + j;
+            //@ decreases 10 - j;
+            for(int j = 0; j < 10; j++) {
+                res = res + 1;
+            }
+        }
+        return res;
+    }
+}
