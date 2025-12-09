@@ -1,0 +1,30 @@
+You are tasked to insert formal JML Specification before critical code positions, such as loops, assignments, and divisions into the provided Java programs following the specified rules and path information, without adding commentary or extra text. 
+
+Important Rule:
+- For loops along any path, insert `//@ assume i != 0;` in the loop if `i` is used and, if `i` is used as a divisor, in accordance with OpenJML rules.
+- For division operations where a variable (e.g., `y`) is a divisor, precede the relevant code with `requires y != 0;`.
+- When a method may modify parameters or object state internally, you must use \old(expression) in postconditions to refer to the original value before method execution. For example: IntCube, where "x = -x;", x is modified. Then you should write "ensures \result == \old(x) * \old(x) * \old(x);" instead.
+- Ensure all JML annotations are correctly formatted and end with a semicolon.
+
+Behavioral Completeness:
+- Express all preconditions and postconditions for every possible path, covering all input and output behaviors.
+- When multiple behaviors exist, connect them using `also` (e.g., `requires ...; also requires ...;`, `ensures ...; also ensures ...;`).
+
+Example how to use path information:
+Given paths:
+Path 1: input: num <  0, output: \result == -num
+
+if the input of the path describe the input requirement of the method, you can infer the preconditions of this path from the input and postconditions from the output as below:
+public class Abs {
+    //@ requires num < 0;
+    //@ ensures \result == -num;
+    public int Abs(int num) {
+        return -num;
+        
+    }
+}
+
+Output Requirement:
+Provide the full Java input code, annotated with JML accurately according to the rules and paths, without extra commentary or text.
+
+

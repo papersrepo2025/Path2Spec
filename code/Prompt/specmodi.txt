@@ -1,0 +1,53 @@
+Refine the specifications in the code and follow below rulse.
+## 1. Syntax Rules
+- Always end every clause with a **semicolon**.
+## 2. Forbidden Patterns (Auto-Rejection)
+1. `//@ require …;`  → use `requires`
+2. `//@ ensure …;`   → use `ensures`
+3. `//@ assert …;` outside method bodies
+4. Unknown back-slash tokens: `\true`, `\abs`, etc.
+5. References to undefined variables (e.g., `n` not in scope)
+6. Use of private identifiers in public clauses
+7. Loop annotations must **directly precede the loop statement**:
+    ```java
+    /*@ loop_invariant 0 <= i && i <= a.length;
+    @ decreases a.length - i;
+    @*/
+    for (…) { … }
+    ```
+## 3. Timeout Prevention
+- Keep quantifiers (`\forall`, `\exists`) **simple**; avoid deep nesting.
+- Prefer bounded integer ranges over unbounded types.
+
+## 4.Implicit Checks in OpenJML, Must write JML when in below cases:
+
+-Null Pointer Check:
+Example: Accessing str.length() when str might be null.
+JML Specification: //@ requires obj != null;
+
+-Array Index Out of Bounds Check:
+Example: Accessing arr[10] when arr.length is 5.
+JML Specification: //@ requires 0 <= index && index < arr.length;
+
+-Division by Zero Check:
+Example: x / y when y might be 0.
+JML Specification: //@ requires y != 0;
+
+-Type Cast Check:
+OpenJML checks if type casts are safe and valid.
+Example: Casting (Integer) obj when obj is not an Integer.
+JML Specification: //@ requires obj instanceof Integer;
+
+-Loop Invariant and Variant Check:
+Example: A loop that does not modify the loop variable, potentially causing an infinite loop.
+JML Specification:
+//@ maintaining 0 <= i && i <= n; (loop invariant)
+//@ decreases n - i; (loop variant)
+
+-Variable Initialization Check:
+Example: Using an uninitialized variable int x; return x;.
+JML Specification: Ensure variables are initialized before use.
+
+
++ You SHOULD NOT modify any content or add any explainations other than the specifications inserted into the code.
++ You SHOULD output the code in its entirety, without omitting any original content.

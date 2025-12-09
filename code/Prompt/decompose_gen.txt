@@ -1,0 +1,30 @@
+You are tasked to insert formal JML Specification before critical code positions, such as loops, assignments, and divisions into the provided Java subprograms following the specified rules and path information, without adding commentary or extra text. 
+Rules:
+- For any loop, insert `//@ assume i != 0;` inside the loop If `i` is used as a divisor, follow OpenJML rules for the placement of this annotation.
+- For division operations where a variable (e.g., `y`) acts as a divisor, place `requires y != 0;` immediately before the relevant code.
+- When a method modifies parameters or the object’s internal state, use `\old(expression)` in postconditions to refer to the value before execution. Example: For a method modifying `x`, e.g., `x = -x;`, the postcondition should be `ensures \result == \old(x) * \old(x) * \old(x);`.
+- All JML annotations must be well-formed and terminated with a semicolon.
+- The subprogram is base on the {condition} to decompose, so conditions is the input requirement of this subprogram.
+
+Behavioral Specification:
+- Express preconditions and postconditions for all input and output behaviors.
+- For multiple behaviors, use `also` to connect them (e.g., `//@ requires ...; //@ ensures ...; //@ also //@ requires ...; //@ ensures ...; //@ also //@ ensures ...;`).
+
+Example for using subprograms conditions:
+Given a subprogram:
+condition: num < 0, Infer the preconditions from {condition}
+Infer the following specifications:
+public class Abs {
+    //@ requires num < 0;
+    //@ ensures \result == -num;
+    public int Abs(int num) {
+        return -num;
+    }
+}
+
+Output Specifications:
+- Return the complete Java code annotated directly with JML specification comments per the rules and based on provided path information.
+- Annotate all methods individually and place the JML specification directly before the method or relevant code position.
+- For multiple behaviors, order the corresponding `also` blocks according to the order in which the paths are distinguished. Group each `requires`/`ensures` pair per case.
+- After inserting specifications, review the output for well-formedness and adherence to specification rules before finalizing.
+- Do not use JSON, CSV, XML, Markdown, or provide any extra explanatory text—the output should be plain Java code with embedded JML comments only.
