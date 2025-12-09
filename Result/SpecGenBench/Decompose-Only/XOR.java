@@ -1,0 +1,32 @@
+
+public class XOR {
+    //@ requires b1 == true && b2 == true;
+    //@ ensures \result == false;
+    //@ also
+    //@ requires b1 == true && b2 == false;
+    //@ ensures \result == true;
+    //@ also
+    //@ requires b1 == false && b2 == true;
+    //@ ensures \result == true;
+    //@ also
+    //@ requires b1 == false && b2 == false;
+    //@ ensures \result == false;
+    public static boolean xor(boolean b1, boolean b2) {
+        if(b1 == true) {
+            if(b2 == true) {
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+        else {
+            if(b2 == true) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    }
+}
