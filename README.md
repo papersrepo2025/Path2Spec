@@ -1,0 +1,36 @@
+# Overview
+
+Formal specifications are critical for program verification, comprehension, and maintenance. However, manually writing them is costly and difficult to scale. Recent studies have shown that Large Language Models (LLMs) are promising for automated specification generation, but existing methods suffer from quality issues.
+
+We analyze a state-of-the-art approach and find that at least **34.6%** of successfully verified specifications actually fail to meaningfully capture the program's distinct behavior, which is a quality issue not captured by metrics that only measure verification success. We further found that a major factor contributing to such hidden quality issues stems from the design of existing methods: these methods treat a program as a single unit, resulting in overly general, coarse-grained constraints.
+
+To this end, we introduce **Path2Spec**, a divide-and-conquer framework that addresses these limitations through systematic path-based reasoning. Path2Spec leverages LLMs to extract all execution paths from an input program, generates path-specific specifications for each, and merges them into a comprehensive overall specification. For complex programs where path-based generation struggles, Path2Spec employs a decompose-then-retry strategy that recursively breaks a program into smaller subprograms based on logical branches, generates specifications for each, and merges them back.
+
+# Installation
+
+## Prerequisites
+*   **Java 8** (for Java PathFinder)
+*   **Python 3.10** (for LLM integration and framework)
+*   **LLM API Access** (OpenAI or compatible service)
+
+## Setup Instructions
+
+```bash
+# Clone the repository
+git clone https://github.com/your-org/path2spec.git
+cd path2spec
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirement.txt
+
+# Set up environment variables
+echo "OPENAI_API_KEY=your_api_key_here" > .env
+
+# Basic Usage
+```bash
+# Run the Path2Spec script.
+python Path2Spec.py
