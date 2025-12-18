@@ -9,7 +9,7 @@ To this end, we introduce **Path2Spec**, a divide-and-conquer framework that add
 # Installation
 
 ## Prerequisites
-*   **Java 8** (for Java PathFinder)
+*   **Java 21** (for OpenJML verification)
 *   **Python 3.10** (for LLM integration and framework)
 *   **LLM API Access** (OpenAI or compatible service)
 
