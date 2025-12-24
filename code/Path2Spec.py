@@ -5,11 +5,10 @@ import os
 import time
 import shutil
 import psutil
-import os
-import re
 from pathlib import Path
 import random
 import json
+import argparse,sys,pathlib
 
 from Path_level_merge import merge
 #from code_merge import merge
@@ -113,10 +112,6 @@ def jml_modify(code, prompt,path,info):
     except Exception as e:
         error_dict = {"UnknownError": str(e)}
     return code_spec, duration,tokens_used
-def read_prompt(file_path):
-    with open(file_path, 'r') as file:
-        content = file.read().strip()
-    return content
 
 def path_clear(input_string):
     path_pattern = re.compile(r'Path \d+:.*?(?=\n\n|Path \d+:|$)', re.DOTALL)
@@ -179,24 +174,19 @@ def kill_process_by_name(names):
     
 def path_level_gen(code,examples,prompt_ex,prompt_gen,prompt_modi,java_file_path,path_pass_file_dir,path_fail_file_dir,path_file,pass_dir):
     pass_status = False
-    base_name = os.path.basename(java_file_path)  
-    file_name, file_extension = os.path.splitext(base_name)
     if not os.path.exists(path_file):       
         paths = path_extract(code, prompt_ex)
-        print(paths)
-        #path_filename = path_dir+ "/{filename}.txt".format(filename=file_name)
-        path_file = open(path_file, 'w')
-        path_file.write(paths)
-        path_file.close()
     else:
         with open(path_file, 'r') as f:
             paths=f.read()
 
     paths=path_clear(paths)
     
+    base_name = os.path.basename(java_file_path)  
+    file_name, file_extension = os.path.splitext(base_name)
+    
     for index, path in enumerate(paths):
         code_spec, duration,tokens_used = jml_gen(code, prompt_gen,path, examples)
-        #path_token[index]={0:{"duration":duration,"tokens_used":tokens_used}}
         code_spec= extract_java_code(code_spec)
         print(code_spec)
 
@@ -237,6 +227,70 @@ def path_level_gen(code,examples,prompt_ex,prompt_gen,prompt_modi,java_file_path
         spec=merge(INPUT_DIR,pass_dir,tmp)
         pass_status=True
     return pass_status,spec
+
+def sub_gen(code, prompt,condition,examples):
+    
+    gpt_prompt = f"""
+            You are a formal methods and JML expert. Generate JML specifications for the given Java program, using the provided path and condition information of the subprogram to guide specification writing for different subprogram cases. The correct examples is:{examples}
+            """
+    try:
+        start_time = time.time()
+        completion = client_gpt.chat.completions.create(
+            #model="gpt-3.5-turbo",  
+            #model='deepseek-reasoner',#DeepSeek-R1
+            #model="qwen-plus",
+            #model="gpt-4o",
+            model="gpt-5",  
+            messages=[
+                {"role": "system", "content": gpt_prompt},
+                {"role": "user", "content": f"{prompt} the code is:{code}, the condition of the subprogram is{condition}"}
+            ],
+            stream=False,
+        )
+        end_time = time.time()
+        duration = end_time - start_time
+        tokens_total = completion.usage.total_tokens
+        prompt_tokens = completion.usage.prompt_tokens
+        completion_tokens = completion.usage.completion_tokens
+        tokens_used={"total":tokens_total,"prompt":prompt_tokens,"complete":completion_tokens}
+        code_spec = completion.choices[0].message.content.strip()
+        #code_spec= json.loads(gpt_output)
+        print(code_spec)
+    except Exception as e:
+        error_dict = {"UnknownError": str(e)}
+    return code_spec, duration,tokens_used
+
+def sub_modify(code, prompt,condition,info,examples):
+    
+    gpt_prompt = f"""
+            The following Java code is instrumented with JML specifications for the path :
+            Verifier failed to verify the specifications given above, with error informatio
+            Please refine the specifications, so that it can pass the verification. The correct examples is:{examples}"""
+    try:
+        start_time = time.time()
+        completion = client_gpt.chat.completions.create(
+            #model="gpt-3.5-turbo",  
+            #model='deepseek-reasoner',#DeepSeek-R1
+            #model="qwen-plus",
+            #model="gpt-4o",
+            model="gpt-5",  
+            messages=[
+                {"role": "system", "content": gpt_prompt},
+                {"role": "user", "content": f"{prompt},The following subprogram is instrumented with JML specifications:{code}, the condition for the subprogram is:{condition}. Verifier failed to verify the specifications given above and the feedback is {info}, Please refine the specifications, so that it can pass the verification, You SHOULD NOT modify any content other than the specifications inserted into the code, You SHOULD output the code in its entirety, withou omitting any original content"}
+            ],
+            stream=False,
+        )
+        end_time = time.time()
+        duration = end_time - start_time
+        tokens_total = completion.usage.total_tokens
+        prompt_tokens = completion.usage.prompt_tokens
+        completion_tokens = completion.usage.completion_tokens
+        tokens_used={"total":tokens_total,"prompt":prompt_tokens,"complete":completion_tokens}
+        code_spec = completion.choices[0].message.content.strip()
+        #code_spec= json.loads(gpt_output)
+    except Exception as e:
+        error_dict = {"UnknownError": str(e)}
+    return code_spec, duration,tokens_used
 
 def decompose(code,prompt_ex,prompt_wg,prompt_m,java_file_path,path_pass_file_dir,path_fail_file_dir,sub_pass_dir,path_file,examples,b=1):
     #f_log = open(log_path, "w")
@@ -297,18 +351,21 @@ def merge_code(code, true_specs,java_file_path,pass_save_path,fail_save_path):
 
     return first_merge_status,merge_code
 
-def mail(source_dir):
+def path2spec(source_dir,out_dir):   
     prmpt_pass=['LeapYear.java', 'FIND_FIRST_IN_SORTED.java', 'Perimeter.java', 'Absolute.java', 'BinarySearch.java', 'StrPalindrome.java', 'AddLoop.java', 'Inverse.java', 'CopyArray.java',  'Neg.java', 'Time.java', 'LinearSearch.java', 'FindFirstZero.java', 'Calculator.java', 'FIND_IN_SORTED.java', 'SetZero.java', 'BankAccount.java', 'FindInArray.java', 'StudentEnrollment.java', 'OddEven.java', 'Smallest.java']
 
     for root, _, files in os.walk(source_dir):
-        prompt_ex=read_prompt("")
-        prompt_gen=read_prompt("")
-        prompt_modi=read_prompt("")
+        prompt_ex=read_prompt("/prompt/path_extract.txt")
+        prompt_gen=read_prompt("/prompt/specgen.txt")
+        prompt_modi=read_prompt("/prompt/specmodi.txt")
         
+        prompt_wg=read_prompt("/prompt/decompose_gen.txt")
+        prompt_m=read_prompt("/prompt/path_gen_modi.txt")
+        oracle_clean = "/prompts/oracle_clean"
+        oracle = "/prompts/oracle"
         
-        #path_dir = os.path.join("/home/danhuang/AIAgent_Spec/HQSPEC/test/test", 'path')
         ##
-        current_directory = os.getcwd()
+        current_directory = out_dir
         path_dir = os.path.join(current_directory, 'path')# path information
         
         path_pass_dir = os.path.join(current_directory, 'path_pass') #path_level_spec
@@ -338,8 +395,8 @@ def mail(source_dir):
             if file.endswith('.java'):
                 examples = []
                 random_files = random.sample(prmpt_pass, 1)
-                oracle_clean = ""
-                oracle = ""
+                oracle_clean = "/prompts/oracle_clean"
+                oracle = "/prompts/oracle"
                 for filename in random_files:
                     file_name, file_extension = os.path.splitext(filename)
                     oracle_clean_path = os.path.join(oracle_clean+"/"+file_name, filename)
@@ -363,12 +420,14 @@ def mail(source_dir):
                 path_fail_file_dir = os.path.join(path_fail_dir, file_name)
                 sub_path_file_dir = os.path.join(path_fail_dir, file_name)
                 
-                for directory in [path_pass_file_dir, path_fail_file_dir]:
+                for directory in [path_pass_file_dir, path_fail_file_dir,sub_path_file_dir,pass_file,fail_file]:
                     if not os.path.exists(directory):
                         os.makedirs(directory)
         
                 with open(java_file, "r", encoding="utf-8") as f:
                     code = f.read()
+                ##Path-base gen
+                print("==============================path-based gen==============================")
                 ##path extraction
                 code = fr"{code}"
                 path_file=path_dir+ "/{filename}.txt".format(filename=file_name)
@@ -379,18 +438,15 @@ def mail(source_dir):
                 condition=[]
                 ## common gerate first
                 code_infr["original"] = code
-                full_pass_num = 0
-                sub_list=[]
+
                 ##first_gen
                 path_pass_status=False
-                java_file_path = tmp_dir+ "/{filename}.java".format(filename=file_name)
-            
-                # path-based gen
                 path_pass_status,spec = path_level_gen(code,prompt_ex,prompt_gen,prompt_modi,java_file_path,path_pass_file_dir,path_fail_file_dir,path_file,pass_dir)
-
                 
+                java_file_path = tmp_dir+ "/{filename}.java".format(filename=file_name)
+                print("==============================Decomposy-they-retry==============================")
                 if not path_pass_status: 
-                    branch_status, branch_infor = decompose(code,prompt_ex,prompt_gen,prompt_modi,java_file_path,path_pass_file_dir,path_fail_file_dir,sub_pass_dir,path_file,examples,b=1)
+                    branch_status, branch_infor = decompose(code,prompt_ex,prompt_wg,prompt_m,java_file_path,path_pass_file_dir,path_fail_file_dir,sub_pass_dir,path_file,examples,b=1)
                     f_log.write("this is branch1: \n")
                     f_log.write(str(branch_status)+"\n"+str(branch_infor)+"\n==============================\n")
                     if branch_status:
@@ -420,7 +476,7 @@ def mail(source_dir):
                                 sub_code = v["code"]
                                 fir_condition=v['condition']
                                 condition.append(fir_condition)
-                                branch_status, branch_infor = decompose(code,prompt_ex,prompt_gen,prompt_modi,java_file_path,path_pass_file_dir,path_fail_file_dir,sub_pass_dir,path_file,examples,b=2)
+                                branch_status, branch_infor = decompose(code,prompt_ex,prompt_wg,prompt_m,java_file_path,path_pass_file_dir,path_fail_file_dir,sub_pass_dir,path_file,examples,b=2)
                                 if branch_status:
                                     #f_log.write(str(branch_infor)+ "\n==============================\n") 
                                     v["second_branch"]=branch_infor
@@ -438,7 +494,7 @@ def mail(source_dir):
                                             sub_code = v["code"]
                                             sec_condition=v['condition']
                                             condition.append(sec_condition)
-                                            branch_status, branch_infor = decompose(code,prompt_ex,prompt_gen,prompt_modi,java_file_path,path_pass_file_dir,path_fail_file_dir,sub_pass_dir,path_file,examples,b=3)
+                                            branch_status, branch_infor = decompose(code,prompt_ex,prompt_wg,prompt_m,java_file_path,path_pass_file_dir,path_fail_file_dir,sub_pass_dir,path_file,examples,b=3)
                                             if branch_status:
                                                 #f_log.write(str(branch_infor)+ "\n==============================\n") 
                                                 v["Third"]=branch_infor
@@ -459,8 +515,23 @@ def mail(source_dir):
                 with open(sub_file, 'w', encoding='utf-8') as f:
                     json.dump(file_infor, f, ensure_ascii=False, indent=4)
 
+def main():
+    parser = argparse.ArgumentParser(description='get source directory')
+    parser.add_argument('src_dir', help='source directory')
+    parser.add_argument('-o', '--out', default='output',
+                    help='output folder (default: ./result)')
+    args = parser.parse_args()
+    
+    src_dir = pathlib.Path(args.src_dir).expanduser().resolve()
+    if not src_dir.is_dir():
+        sys.exit(f'No such directory: {src_dir}')
+    out_dir = pathlib.Path(args.out).resolve()
+    #src_dir="/home/danhuang/AIAgent_Spec/HQSPEC/test_2"
+    path2spec(src_dir,out_dir)
+
 if __name__ == '__main__':
-    source_dir = ""
-    mail(source_dir)
+    main()                    
+                                
+               
                                 
                
